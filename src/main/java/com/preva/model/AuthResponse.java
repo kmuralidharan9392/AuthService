@@ -1,4 +1,4 @@
-package com.example.model;
+package com.preva.model;
 
 public class AuthResponse {
     private String token;

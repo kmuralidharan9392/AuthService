@@ -1,0 +1,38 @@
+plugins {
+    id 'org.springframework.boot' version '3.1.5'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // AWS Cognito dependencies
+    implementation 'software.amazon.awssdk:cognitoidp:2.18.0'
+    
+    // For email functionality
+    implementation 'software.amazon.awssdk:ses:2.18.0'
+    
+    // JWT support
+    implementation 'org.springframework.security:spring-security-jwt'
+    
+    // Development tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks {
+    compileJava {
+        options.encoding = 'UTF-8'
+    }
+}

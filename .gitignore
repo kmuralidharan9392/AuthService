@@ -1,0 +1,29 @@
+# --- AI Tools ---
+.aider*
+
+# --- System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Gradle Build Artifacts ---
+.gradle/
+build/
+
+# --- IDE Configurations ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# --- Environment Secrets (CRITICAL) ---
+.env
+*.env
+.env.local
+
+# --- Log Files ---
+*.log

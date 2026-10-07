@@ -1,0 +1,75 @@
+name: Deploy Spring Boot to Amazon EC2
+
+on:
+  push:
+    branches:
+      - main  # Triggers deployment when you push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java Environment
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      # 3. Grant execute permission for Gradle Wrapper
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      # 4. Build executable JAR file with Gradle
+      - name: Build with Gradle
+        run: ./gradlew bootJar -x test  # Skips tests for faster deployment; remove "-x test" if tests are required
+
+      # 5. Alternative standard method: Use SCP to upload first, then SSH to run
+      - name: Copy JAR file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "build/libs/*.jar"
+          target: "/home/ubuntu/app"
+          strip_components: 2 # Strips 'build/libs' so the jar lands straight into /app/
+            
+      # 6. SSH back into EC2 to stop the old process and run the new JAR
+      - name: Execute remote SSH commands to restart app
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 🟢 CRUCIAL: Explicitly load the Cognito environment variables provisioned by Terraform
+            source /etc/profile.d/app_env.sh
+            
+            cd /home/ubuntu/app
+            
+            # Find and stop any application currently running on port 8080
+            PID=$(lsof -t -i:8080)
+            if [ -z "$PID" ]; then
+              echo "No application running on port 8080."
+            else
+              echo "Stopping old application process running on PID: $PID"
+              kill -15 $PID
+              sleep 5
+            fi
+            
+            # Identify the newly transferred jar file
+            JAR_NAME=$(ls *.jar | head -n 1)
+            
+            # Launch the fresh jar in the background using your 'prod' multi-profile
+            nohup java -jar -Dspring.profiles.active=prod $JAR_NAME > app.log 2>&1 &
+            
+            echo "Application deployment complete! Spinning up in background..."

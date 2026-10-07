@@ -1,0 +1,51 @@
+# ==============================================================================
+# DEFAULT CONFIGURATION (Common settings across ALL environments)
+# ==============================================================================
+spring:
+  application:
+    name: auth-service
+  profiles:
+    active: dev # 🟢 Fallback default profile if no active profile is specified at startup
+
+server:
+  port: 8080
+
+---
+# ==============================================================================
+# LOCAL DEVELOPMENT PROFILE
+# ==============================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+# For local development, use mock credentials so the app boots cleanly without AWS connection errors
+env:
+  environment: local-dev
+  region: ap-south-1
+
+aws:
+  cognito:
+    userPoolId: mock-pool-id-123
+    clientId: mock-client-id-123
+    clientSecret: mock-client-secret-123
+
+---
+# ==============================================================================
+# PRODUCTION PROFILE (EC2 Infrastructure Environment)
+# ==============================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+# 🟢 Pulls values straight from the Linux environment variables injected by Terragrunt!
+env:
+  environment: ${APP_ENV}
+  region: ${AWS_REGION}
+
+aws:
+  cognito:
+    userPoolId: ${COGNITO_USER_POOL_ID}
+    clientId: ${COGNITO_CLIENT_ID}
+    clientSecret: ${COGNITO_CLIENT_SECRET}

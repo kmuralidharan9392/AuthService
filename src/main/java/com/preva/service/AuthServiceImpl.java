@@ -23,17 +23,8 @@ import java.util.Map;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private CognitoIdentityProviderClient cognitoClient;
-    private final EnvironmentProperties environmentProperties;
+    private final CognitoIdentityProviderClient cognitoIdentityProviderClient;
     private final CognitoProperties cognitoProperties;
-
-
-    @PostConstruct
-    public void init() {
-        this.cognitoClient = CognitoIdentityProviderClient.builder()
-                .region(Region.of(environmentProperties.getRegion()))
-                .build();
-    }
 
     @Override
     public String signUpCustomer(SignUpCustomerRequest signUpCustomerRequest) {
@@ -53,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
                     .userAttributes(AttributeType.builder().name("email").value(signUpCustomerRequest.getEmail()).build())
                     .build();
 
-            cognitoClient.signUp(signUpClientRequest);
+            cognitoIdentityProviderClient.signUp(signUpClientRequest);
             return "Registration initiated. Please check your email for the verification OTP code.";
 
         } catch (CognitoIdentityProviderException e) {
@@ -77,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
                     .username(verificationCustomerRequest.getEmail())
                     .confirmationCode(verificationCustomerRequest.getCode())
                     .build();
-            cognitoClient.confirmSignUp(confirmSignUpRequest);
+            cognitoIdentityProviderClient.confirmSignUp(confirmSignUpRequest);
 
             // 2. Now that the user is officially active, safely map them to your customer group
             AdminAddUserToGroupRequest groupRequest = AdminAddUserToGroupRequest.builder()
@@ -85,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
                     .username(verificationCustomerRequest.getEmail())
                     .groupName("customer")
                     .build();
-            cognitoClient.adminAddUserToGroup(groupRequest);
+            cognitoIdentityProviderClient.adminAddUserToGroup(groupRequest);
 
             return "Account successfully verified and activated.";
 
@@ -115,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
                     .authParameters(authParams)
                     .build();
 
-            InitiateAuthResponse authResponse = cognitoClient.initiateAuth(authRequest);
+            InitiateAuthResponse authResponse = cognitoIdentityProviderClient.initiateAuth(authRequest);
             AuthenticationResultType result = authResponse.authenticationResult();
 
             return new LogInCustomerResponse(

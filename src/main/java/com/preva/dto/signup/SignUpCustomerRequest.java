@@ -15,6 +15,8 @@ import lombok.*;
 @RequiredArgsConstructor
 public class SignUpCustomerRequest {
     @NotBlank
+    private final String fullName;
+    @NotBlank
     private final String email;
     @NotBlank
     private final String password;

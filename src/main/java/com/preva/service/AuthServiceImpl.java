@@ -41,7 +41,18 @@ public class AuthServiceImpl implements AuthService {
                     .secretHash(secretHash)
                     .username(signUpCustomerRequest.getEmail())
                     .password(signUpCustomerRequest.getPassword())
-                    .userAttributes(AttributeType.builder().name("email").value(signUpCustomerRequest.getEmail()).build())
+                    .userAttributes(
+                            // 1. Email attribute
+                            AttributeType.builder()
+                                    .name("email")
+                                    .value(signUpCustomerRequest.getEmail())
+                                    .build(),
+                            // 2. Full name attribute (maps to Cognito's standard 'name' attribute)
+                            AttributeType.builder()
+                                    .name("name")
+                                    .value(signUpCustomerRequest.getFullName())
+                                    .build()
+                    )
                     .build();
 
             cognitoIdentityProviderClient.signUp(signUpClientRequest);
